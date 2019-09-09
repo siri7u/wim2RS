@@ -9,7 +9,7 @@ $urls = array(
 for($i=0; $i < count($urls); ++$i) 
 {
     echo $urls[$i],'<br>';
-    var_dump(parse_url($urls[$i]));
+    var_dump(parse_url($urls[$i])   );
 }
 
 $url = "http://subdom.hostname.com/path/file.php?arg1=value1&arg2=value2#anchor";

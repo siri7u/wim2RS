@@ -13,7 +13,7 @@ for($i=0; $i < count($urls); ++$i)
     parse_str(parse_url($urls[$i], PHP_URL_QUERY), $output);
 
     var_dump($output);
-    
+     
 }
 
 ?>
