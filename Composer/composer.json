@@ -1,0 +1,11 @@
+{
+    "name": "siri7u/tuto",
+    "description": "desc",
+    "authors": [
+        {
+            "name": "siri romaric",
+            "email": "romaric.siri2@etu.univ-lorraine.fr"
+        }
+    ],
+    "require": {}
+}
