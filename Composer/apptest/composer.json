@@ -1,0 +1,30 @@
+{
+    "name": "siri7u/apptest",
+    "description": "az",
+	
+	
+	
+    "require": {
+        "michelf/php-markdown": "^1.8"
+    },
+	
+	"autoload": {
+
+        "psr-4": {
+
+            "MesClasses\\": "app/src"
+
+        }
+
+    },
+
+
+	
+    "authors": [
+        {
+            "name": "siri romaric",
+            "email": "romaric.siri2@etu.univ-lorraine.fr"
+        }
+		
+    ]
+}

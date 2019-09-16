@@ -7,5 +7,7 @@
             "email": "romaric.siri2@etu.univ-lorraine.fr"
         }
     ],
-    "require": {}
+    "require": {
+        "michelf/php-markdown": "^1.8"
+    }
 }
