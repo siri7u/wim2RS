@@ -1,0 +1,112 @@
+<?php 
+function wim2a_menu() {
+$items = array();
+
+$items['wim2a/page1/%'] = array(
+  'title' => 'WIM2a TEST',
+  'page callback' => 'wim2a_page1',
+  'access arguments' => array('access content'),
+  'type' => MENU_CALLBACK,
+);
+
+$items['wim2a/monformulaire'] = array(
+  'title' => 'Mon Formulaire',
+  'page callback' => 'drupal_get_form',
+  'page arguments' => array('wim2a_monformulaire'),
+  'access callback' => true,
+  'type' => MENU_CALLBACK,
+);
+
+
+return $items;
+
+}
+
+function wim2a_page1($arg='none') { 
+  $outputs['arg'] = $arg;
+  $outputs['request_uri'] = $_SERVER['REQUEST_URI'];
+  $outputs['query_string'] = $_SERVER['QUERY_STRING'];
+  $outputs['path_info'] = isset($_SERVER['PATH_INFO']) ?
+  $_SERVER['PATH_INFO'] : 'non défini'; $outputs['script_name'] =
+  $_SERVER['SCRIPT_NAME']; $str = ''; foreach($outputs as $key => $value)
+  { $str .= $key . '
+  <br>
+  ' . $value . '
+  <br>
+  <br>
+  '; } 
+  return $str; 
+}
+
+$active = array(0 => t('Closed'), 1 => t('Active'));
+
+function wim2a_monformulaire($form, &$form_state) {
+ $form['nom'] = array(
+     '#type' => 'textfield',
+     '#title' => 'Nom',
+      '#name' => 'nom'
+ );
+ $form['prenom'] = array(
+     '#type' => 'textfield',
+     '#title' => 'Prénom',
+      '#name' => 'prenom'
+ );
+ 
+$optionSexe= array(0=> 'choisir un sexe', 'Homme'=>'Homme', 'Femme' => 'Femme');
+$form['sexe'] = array(
+  '#type' => 'select',
+  '#options' => $optionSexe,
+  '#name' => 'sexe',
+);
+
+
+$optionDate = array(0=> 'choisir une date','2001'=>'2001', '2002' => '2002');
+$form['birthdate'] = array(
+  '#type' => 'select',
+  '#options' => $optionDate,
+  '#name' => 'birthdate',
+);
+
+$form['go'] = array(
+  '#type' => 'submit',
+  '#value' => 'Valider',
+);
+
+ return $form;
+}
+
+function wim2a_monformulaire_validate($form, &$form_state) {
+    if ($form_state['values']['nom'] == '') {
+        form_set_error('nom', t('Vous devez saisir un nom'));     
+    }
+
+    if ($form_state['values']['prenom'] == '') {
+      form_set_error('prenom', t('Vous devez saisir un prénom'));
+    }
+
+    if ($form_state['values']['sexe'] == '0') {
+      form_set_error('sexe', t('Vous devez saisir un sexe'));
+    }
+
+    if ($form_state['values']['birthdate'] == '0') {
+      form_set_error('birthdate', t('Vous devez saisir un birthdate'));
+    }
+}
+
+
+
+
+function wim2a_monformulaire_submit($form, &$form_state) {
+
+
+
+  $data = array(
+      ':nom'=> $form_state['values']['nom'],
+      ':prenom'=> $form_state['values']['nom'],
+      ':sexe' => $form_state['values']['sexe'],
+      ':birthdate' => $form_state['values']['birthdate'],
+  );
+  $sql = 'INSERT INTO wim2_rs (nom, prenom, sexe, birthdate) VALUES (:nom, :prenom, :sexe, :birthdate)';
+  db_query($sql, $data);
+  drupal_set_message('Vos données ont été enregistrées');
+}

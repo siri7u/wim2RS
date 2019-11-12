@@ -1,0 +1,204 @@
+<?php
+/**
+ * @file
+ * Enregistre et affiche la liste des pages visit�es pr�c�demment
+ */
+/**
+ * Implements hook_init().
+ */
+function module3_init() {
+    $trail = variable_get('module3_history', array());
+    //Grab the trial history from a variable
+
+    $trail[] = array(               //Add current page to trail.
+        'title' => strip_tags(drupal_get_title()),
+        'path' => $_GET['q'],
+        'timestamp' => REQUEST_TIME,
+    );
+
+    variable_set('module3_history', $trail);    //Save the trail as a variable
+}
+
+/**
+ * Implements hook_permission().
+ */
+function module3_permission() {
+        return array(
+            'administer trails' => array(
+                'title' => t('Administrer le module module3'),
+                'description' => t('Effectue les tâches d\'administration du module3.'),
+            ),
+            'access trails blocks' => array(
+                'title' => t('Acces aux blocs du module3'),
+                'description' => t('Affiche les blocs générés par module3."')
+            ),
+        );
+    }
+
+/**
+ * Implements hook_menu().
+ */
+function module3_menu() {
+    //Module settings.
+    $items['admin/config/module3'] = array(
+        'title' => 'Cheminement dans le site',
+        'description' => 'Configuration historique des pages',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('module3_admin_settings'),
+        'access arguments' => array('administer trails'),
+        'file' => 'module3.admin.inc',
+        'file path' => drupal_get_path('module', 'module3'),
+    );
+    return $items;
+}
+
+/**
+ * Implements hook_cron().
+ */
+function module3_cron() {
+    $trail = variable_get('module3_history', array());
+    $count_minus_5 = count($trail) - 5;
+    $short_trail = array_slice($trail, $count_minus_5);
+    variable_set('module3_history', $short_trail);
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function module3_block_info(){
+    $blocks['history'] = array(
+        'info' => t('History'),
+        'cache' => DRUPAL_NO_CACHE,
+    );
+    return $blocks;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function module3_block_configure($delta = '') {
+    //Get the maximum allowed value from the configuration form.
+    $max_to_display = variable_get('module3_block_max', 50);
+
+    //Add a select box of numbers from 1 to $max_to_display.
+    $form['module3_block_num'] = array(
+        '#type' => 'select',
+        '#title' => t('Nombre d\'items à montrer'),
+        '#default_value' => variable_get('module3_block_num', '5'),
+        '#options' => drupal_map_assoc(range(1, $max_to_display)),
+    );
+    return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function module3_block_save($delta = '', $edit = array()) {
+    variable_set('module3_block_num', $edit['module3_block_num']);
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function module3_block_view($delta = '') {
+    if (user_access('access trail blocks')) {                               //test permission
+        $block = array();
+        switch ($delta) {
+            case 'history' :                                                 //Create list of previous paths.
+                $trail = variable_get('module3_history', array());
+                $reverse_trail = array_reverse($trail);                      //newest pages first.
+                $num_items = variable_get('module3_block_num', '5');
+
+                //Output the latest items as a list
+                $output = '';
+                for ($i = 0; $i < $num_items; $i++) {
+                    if ($item = $reverse_trail[$i]) {
+                        $output .= '<li>' . l($item['title'], $item['path']) . ' - '
+                                . format_interval(REQUEST_TIME - $item['timestamp'])
+                                . ' ' . t('ago') . '<li>';
+                    }
+                }
+                if ($output != '') {
+                    $output = '<p>'
+                        . t('Ci-dessous les !num dernières pages que vous avez visitées.', array('!num' => $num_items))
+                        . '</p> <ul>' . $output . '</ul>';
+                }
+
+                //Prepare the $block variable, subject = title, content = output.
+                $block['subject'] = 'History';
+                $block['content'] = $output;
+                break;
+        }
+        return $block;
+    }
+}
+
+$active = array(0 => t('Closed'), 1 => t('Active'));
+
+function module3_show_form($form, &$form_state) {
+    $form['nom'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Nom :',
+        '#name' => 'nom',
+    );
+    $form['prenom'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Prénom :',
+        '#name' => 'prenom',
+    );
+    $form['sexe']['active'] = array(
+        '#type' => 'radios',
+        '#title' => t('Poll status'),
+        '#default_value' => isset($node->active) ? $node->active : 1,
+        '#options' => $active,
+        '#access' => $admin,
+    );
+    $form['annee'] = array(
+        '#type' => 'select',
+        '#options' => array(0=>'Choisir une année', 1 => '1A', 2 => '2A'),
+        '#name' => 'annee',
+    );
+    $form['motdepasse'] = array(
+        '#type' => 'password',
+        '#title' => t('Password'),
+        '#maxlength' => 64,
+        '#size' => 15,
+    );
+    $form['motdepasseconfirm'] = array(
+        '#type' => 'password_confirm',
+        '#title' => t('Password'),
+        '#size' => 25,
+    );   
+    $form['go'] = array(
+        '#type' => 'submit',
+        '#value' => 'Valider',
+    );
+    return $form;
+}
+
+function module3_show_form_validate($form, &$form_state) {
+    if ($form_state['values']['nom'] == '') {
+        form_set_error('nom', t('Vous devez saisir un nom.'));
+    }
+    if ($form_state['values']['prenom'] == '') {
+        form_set_error('prenom', t('Vous devez saisir un prénom.'));
+    }
+}
+
+function module3_show_form_submit($form, &$form_state) {
+    $data = array(
+        ':nom'=> $form_state['values']['nom'],
+        ':prenom'=> $form_state['values']['nom'],
+    );
+    $sql = 'INSERT INTO table_etudiant (nom, prenom) VALUES (:nom, :prenom)';
+    db_query($sql, $data);
+    drupal_set_message('Vos données ont été enregistrées');
+}
+
+$items['module3/monformulaire'] = array(
+    'title' => 'Mon Formulaire',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('module3_show_form'),
+    'access callback' => true,
+    'type' => MENU_CALLBACK,
+);
